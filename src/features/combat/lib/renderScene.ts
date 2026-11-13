@@ -1,6 +1,10 @@
-import type { GameDoc } from "../../../shared/types";
+import type { GameDoc, Trace } from "../../../shared/types";
 import { WIDTH, HEIGHT } from "../../../shared/types";
-export function renderScene(ctx: CanvasRenderingContext2D, d: GameDoc) {
+export function renderScene(
+  ctx: CanvasRenderingContext2D,
+  d: GameDoc,
+  traces?: Trace[],
+) {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   ctx.fillStyle = "#0a1019";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -27,6 +31,30 @@ export function renderScene(ctx: CanvasRenderingContext2D, d: GameDoc) {
     ctx.beginPath();
     ctx.arc(500, 325, r, 0, Math.PI * 2);
     ctx.stroke();
+  }
+  if (traces?.length) {
+    ctx.save();
+    ctx.setLineDash([4, 5]);
+    ctx.lineWidth = 1;
+    for (const t of traces) {
+      ctx.strokeStyle =
+        t.kind === "enemyBullet"
+          ? "#ff827d99"
+          : t.kind === "playerBullet"
+            ? "#a7ffe199"
+            : t.kind === "enemy"
+              ? "#ed697b66"
+              : "#9eeeb399";
+      ctx.beginPath();
+      ctx.moveTo(t.from.x, t.from.y);
+      ctx.lineTo(t.to.x, t.to.y);
+      ctx.stroke();
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.beginPath();
+      ctx.arc(t.to.x, t.to.y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
   for (const drop of d.drops) {
     ctx.fillStyle =
@@ -115,7 +143,11 @@ export function renderScene(ctx: CanvasRenderingContext2D, d: GameDoc) {
   ctx.restore();
   ctx.fillStyle = "#526571";
   ctx.font = "10px monospace";
-  ctx.fillText("SECTOR 07 / SIGNAL ACTIVE", 48, HEIGHT - 42);
+  ctx.fillText(
+    d.training ? "SECTOR 07 / TRAINING LAB" : "SECTOR 07 / SIGNAL ACTIVE",
+    48,
+    HEIGHT - 42,
+  );
   ctx.fillText(
     `${d.enemies.length.toString().padStart(3, "0")} HOSTILES`,
     WIDTH - 145,

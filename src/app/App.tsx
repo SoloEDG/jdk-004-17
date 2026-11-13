@@ -3,6 +3,7 @@ import {
   Activity,
   ArrowUpRight,
   Crosshair,
+  FlaskConical,
   Pause,
   Play,
   RotateCcw,
@@ -17,10 +18,22 @@ import { WavePanel } from "../features/waves";
 import { ArsenalPanel } from "../features/arsenal";
 import { UpgradeDialog, ExperienceBar } from "../features/progression";
 import { StatsPanel, ResultDialog, HistoryPanel } from "../features/results";
+import { TrainingPanel, previewStep } from "../features/training";
 import { formatTime } from "../shared/math";
 import { useAudio } from "./useAudio";
 export function App() {
-  const { game, input, start, toggle, choose, restart } = useGame();
+  const {
+    game,
+    input,
+    trainingOn,
+    start,
+    toggle,
+    choose,
+    restart,
+    enterTraining,
+    exitTraining,
+    stepFrames,
+  } = useGame();
   const d = game.current;
   const [history, setHistory] = useState(false);
   const [help, setHelp] = useState(false);
@@ -29,6 +42,7 @@ export function App() {
     if (d.phase === "playing") d.phase = "paused";
     setHistory(true);
   };
+  const traces = trainingOn ? previewStep(d, input.current) : undefined;
   return (
     <div className="app-shell">
       <header>
@@ -101,15 +115,17 @@ export function App() {
                 <span
                   className={`status-dot ${d.phase === "playing" ? "" : "idle"}`}
                 />
-                {d.phase === "playing"
-                  ? "行动进行中"
-                  : d.phase === "ready"
-                    ? "等待部署"
-                    : d.phase === "upgrade"
-                      ? "进化选择中"
-                      : d.phase === "ended"
-                        ? "行动已结束"
-                        : "战场已暂停"}
+                {trainingOn
+                  ? "训练模式 · 单步调试"
+                  : d.phase === "playing"
+                    ? "行动进行中"
+                    : d.phase === "ready"
+                      ? "等待部署"
+                      : d.phase === "upgrade"
+                        ? "进化选择中"
+                        : d.phase === "ended"
+                          ? "行动已结束"
+                          : "战场已暂停"}
               </span>
               <div className="timer">
                 <Activity size={14} />
@@ -125,6 +141,7 @@ export function App() {
                 <button
                   aria-label="暂停或继续"
                   disabled={
+                    trainingOn ||
                     d.phase === "ready" ||
                     d.phase === "upgrade" ||
                     d.phase === "ended"
@@ -150,7 +167,7 @@ export function App() {
               </div>
             </div>
             <div className="canvas-wrap">
-              <Battlefield doc={d} input={input} />
+              <Battlefield doc={d} input={input} traces={traces} />
               <div className="sector-tag">
                 SECTOR 07<span>∞ DEEP SPACE</span>
               </div>
@@ -174,7 +191,7 @@ export function App() {
                   </div>
                 </div>
               )}
-              {d.phase === "paused" && !history && !help && (
+              {d.phase === "paused" && !trainingOn && !history && !help && (
                 <div className="overlay">
                   <div className="pause-card">
                     <Pause size={32} />
@@ -183,8 +200,14 @@ export function App() {
                     <button className="primary" onClick={toggle}>
                       继续行动 <Play size={16} />
                     </button>
+                    <button className="training-enter" onClick={enterTraining}>
+                      <FlaskConical size={15} /> 进入训练模式
+                    </button>
                   </div>
                 </div>
+              )}
+              {trainingOn && d.phase === "paused" && (
+                <TrainingPanel doc={d} step={stepFrames} exit={exitTraining} />
               )}
               {d.phase === "upgrade" && (
                 <UpgradeDialog doc={d} choose={choose} />

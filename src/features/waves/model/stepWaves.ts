@@ -35,9 +35,13 @@ export function stepWaves(doc: GameDoc, dt: number): void {
     enemy.y += toward.y * speed * standOff * dt;
     enemy.cooldown -= dt;
     if (enemy.kind !== "chaser" && enemy.cooldown <= 0) {
-      enemy.cooldown = enemy.kind === "elite" ? 1.8 : 2.6;
-      const angle = Math.atan2(toward.y, toward.x),
+      // Training directives bend only the next volley, then are consumed.
+      const directive = doc.training?.enemy[enemy.id];
+      enemy.cooldown =
+        directive?.interval ?? (enemy.kind === "elite" ? 1.8 : 2.6);
+      const angle = directive?.angle ?? Math.atan2(toward.y, toward.x),
         spread = enemy.kind === "elite" ? [-0.24, 0, 0.24] : [0];
+      if (directive && doc.training) delete doc.training.enemy[enemy.id];
       for (const offset of spread) {
         doc.bullets.push({
           id: doc.nextId++,

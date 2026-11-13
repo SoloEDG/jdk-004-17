@@ -11,9 +11,11 @@ export function stepArsenal(doc: GameDoc, input: Input, dt: number): number {
   for (const weapon of doc.weapons) {
     weapon.cooldown -= dt;
     if (weapon.cooldown > 0) continue;
+    // Temporary training overrides feed the same cooldown and firing rules.
+    const override = doc.training?.weapons[weapon.id];
     weapon.cooldown = Math.max(
       0.08,
-      WEAPON_CATALOG[weapon.id].interval /
+      (override?.interval ?? WEAPON_CATALOG[weapon.id].interval) /
         haste /
         (1 + (weapon.level - 1) * 0.12),
     );
@@ -29,7 +31,7 @@ export function stepArsenal(doc: GameDoc, input: Input, dt: number): number {
           "pulse",
           angle + (i - (count - 1) / 2) * 0.12,
           damage,
-          440,
+          override?.speed ?? 440,
           doc.upgrades.pierce || 0,
         );
         shots++;
@@ -43,7 +45,7 @@ export function stepArsenal(doc: GameDoc, input: Input, dt: number): number {
           weapon.id,
           doc.time * 0.8 + (i * Math.PI * 2) / count,
           damage,
-          weapon.id === "orbit" ? 150 : 240,
+          override?.speed ?? (weapon.id === "orbit" ? 150 : 240),
           weapon.id === "orbit" ? 3 : 1,
         );
         shots++;

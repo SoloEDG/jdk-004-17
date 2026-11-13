@@ -1,20 +1,22 @@
 import { useEffect, useRef } from "react";
-import type { GameDoc, Input } from "../../../shared/types";
+import type { GameDoc, Input, Trace } from "../../../shared/types";
 import { WIDTH, HEIGHT } from "../../../shared/types";
 import { renderScene } from "../lib/renderScene";
 export function Battlefield({
   doc,
   input,
+  traces,
 }: {
   doc: GameDoc;
   input: React.RefObject<Input>;
+  traces?: Trace[];
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = canvas.current;
     if (!c) return;
     const ctx = c.getContext("2d");
-    if (ctx) renderScene(ctx, doc);
+    if (ctx) renderScene(ctx, doc, traces);
   });
   return (
     <canvas

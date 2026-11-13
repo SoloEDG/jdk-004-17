@@ -88,12 +88,47 @@ export interface GameDoc {
   records: RunRecord[];
   notice: string;
   victory: boolean;
+  training?: TrainingDirectives;
 }
 export interface Input {
   x: number;
   y: number;
   aim: Vec;
   firing: boolean;
+}
+export interface TrainingEnemyDirective {
+  /** Absolute firing angle (radians) for the enemy's next volley. */
+  angle?: number;
+  /** Cooldown (seconds) applied after the enemy's next volley. */
+  interval?: number;
+}
+export interface TrainingWeaponDirective {
+  /** Bullet speed override (px/s) while training is active. */
+  speed?: number;
+  /** Base firing interval override (seconds) while training is active. */
+  interval?: number;
+}
+export interface TrainingLedger {
+  kills: number;
+  damage: number;
+  taken: number;
+  shots: number;
+  collected: number;
+  deaths: number;
+  steps: number;
+}
+export interface TrainingDirectives {
+  /** One-shot overrides consumed by the real enemy firing rules. */
+  enemy: Record<number, TrainingEnemyDirective>;
+  /** Temporary overrides applied by the real weapon rules. */
+  weapons: Partial<Record<WeaponId, TrainingWeaponDirective>>;
+  /** Training-only bookkeeping; never written into the official stats. */
+  ledger: TrainingLedger;
+}
+export interface Trace {
+  from: Vec;
+  to: Vec;
+  kind: "player" | "enemy" | "playerBullet" | "enemyBullet";
 }
 export interface KillEvent {
   enemy: Enemy;
